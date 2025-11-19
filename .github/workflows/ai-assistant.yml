@@ -1,0 +1,22 @@
+name: AI Assistant demo
+on:
+  workflow_dispatch:
+
+jobs:
+  ai-assistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install utilities
+        run: sudo apt-get update && sudo apt-get install -y jq curl
+
+      - name: Run AI assistant script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          BOT_PAT: ${{ secrets.BOT_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          chmod +x .github/scripts/ai-assistant.sh
+          .github/scripts/ai-assistant.sh
