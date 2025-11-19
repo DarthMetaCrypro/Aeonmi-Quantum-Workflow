@@ -1,0 +1,124 @@
+{
+  "name": "aeonmi-quantum-workflow",
+  "version": "1.0.0",
+  "main": "electron/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "eject": "expo eject",
+    "build:web": "expo build:web",
+    "build:android": "expo build:android",
+    "build:ios": "expo build:ios",
+    "electron": "NODE_ENV=development electron .",
+    "electron:dev": "concurrently \"npm run web\" \"wait-on http://localhost:19006 && NODE_ENV=development electron .\"",
+    "electron:pack": "npm run build:web && electron-builder",
+    "electron:dist": "npm run build:web && electron-builder --publish=never",
+    "build:electron": "npm run build:web && electron-builder"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^13.0.0",
+    "@react-native-async-storage/async-storage": "1.17.11",
+    "@react-navigation/bottom-tabs": "^6.5.7",
+    "@react-navigation/native": "^6.1.6",
+    "@react-navigation/native-stack": "^6.9.12",
+    "@shopify/react-native-skia": "0.1.172",
+    "expo": "~48.0.15",
+    "expo-build-properties": "~0.6.0",
+    "expo-constants": "~14.2.1",
+    "expo-crypto": "~12.2.1",
+    "expo-file-system": "~15.2.2",
+    "expo-gl": "~12.4.0",
+    "expo-haptics": "~12.2.1",
+    "expo-linear-gradient": "~12.1.2",
+    "expo-random": "~13.1.1",
+    "expo-secure-store": "~12.1.1",
+    "expo-status-bar": "~1.4.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.71.14",
+    "react-native-gesture-handler": "~2.9.0",
+    "react-native-reanimated": "~2.14.4",
+    "react-native-safe-area-context": "4.5.0",
+    "react-native-screens": "~3.20.0",
+    "react-native-svg": "13.4.0",
+    "react-native-tailwindcss": "^1.1.11",
+    "react-native-web": "~0.18.10",
+    "zustand": "^4.3.8"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.0.14",
+    "@types/react-native": "~0.70.6",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.2",
+    "electron-builder": "^26.0.12",
+    "typescript": "~4.9.4",
+    "wait-on": "^9.0.3"
+  },
+  "expo": {
+    "web": {
+      "build": {
+        "babel": {
+          "include": [
+            "**/*"
+          ],
+          "exclude": [
+            "electron-main.js",
+            "electron-preload.js"
+          ]
+        }
+      }
+    }
+  },
+  "build": {
+    "productName": "Aeonmi Quantum Workflow",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/main.js",
+      "electron/preload.js",
+      "web-build/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    }
+  },
+  "private": true
+}
