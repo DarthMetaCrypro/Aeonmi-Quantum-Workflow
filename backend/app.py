@@ -41,10 +41,39 @@ except ImportError:
     AWS_BRAKET_AVAILABLE = False
     print("WARNING: AWS Braket not installed - AWS hardware features limited")
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 import random
 
 app = Flask(__name__)
 CORS(app)
+
+# Rate Limiting Configuration
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Logging Configuration
+import logging
+from logging.handlers import RotatingFileHandler
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Add file handler for production logs
+if not app.debug:
+    os.makedirs('logs', exist_ok=True)
+    file_handler = RotatingFileHandler('logs/quantumforge.log', maxBytes=10240000, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('QuantumForge startup')
 
 # CSRF Configuration
 app.config['WTF_CSRF_ENABLED'] = True
@@ -275,6 +304,7 @@ def quantum_predict():
 
 # BB84 Quantum Security
 @app.route('/api/quantum/bb84/generate-key', methods=['POST'])
+@limiter.limit("10 per hour")
 def generate_quantum_key():
     data = request.json
     key_length = data.get('key_length', 256)
@@ -528,6 +558,7 @@ def list_quantum_devices():
     return jsonify({'devices': devices, 'total': len(devices)})
 
 @app.route('/api/quantum/hardware/submit', methods=['POST'])
+@limiter.limit("5 per hour")
 @jwt_required()
 def submit_quantum_job():
     """Submit a quantum circuit to real hardware"""
