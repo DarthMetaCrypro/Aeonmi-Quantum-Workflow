@@ -1,0 +1,31 @@
+# Aeonmi Main Application Entry Point
+# This is the primary entry point for the Aeonmi application
+
+import config from './config.qube'
+import engine from './core/engine.aeonmi'
+import ui from './ui/interface.qube'
+import realtime_app from './core/realtime_app.aeonmi'
+
+# Initialize the application
+init_app() {
+    print("Aeonmi Application Starting...")
+    print("Loading configuration...")
+
+    # Load configuration
+    config.load()
+
+    print("Initializing engine...")
+    engine.start()
+
+    print("Loading user interface...")
+    ui.render()
+
+    print("Starting realtime quantum telemetry...")
+    realtime_app.launch()
+
+    print("Application ready!")
+}
+
+# Main execution
+if __name__ == "__main__":
+    init_app()

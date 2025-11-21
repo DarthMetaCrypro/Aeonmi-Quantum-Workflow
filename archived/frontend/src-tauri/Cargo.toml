@@ -1,0 +1,28 @@
+[package]
+name = "quantumforge-app"
+version = "1.0.0"
+description = "QuantumForge - Revolutionary Quantum Workflow Automation Platform"
+authors = ["QuantumForge Team"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.77"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "2.0", features = [] }
+rand = "0.8"
+base64 = "0.22"
+sha2 = "0.10"
+tokio = { version = "1.0", features = ["full"] }
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = [ "tauri/custom-protocol" ]

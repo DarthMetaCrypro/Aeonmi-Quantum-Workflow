@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Mobile Workflow Engine - Interface Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            min-height: 100vh;
+            border-left: 1px solid #333;
+            border-right: 1px solid #333;
+        }
+
+        .header {
+            background: #1a1a1a;
+            padding: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .title {
+            font-size: 24px;
+            color: #00d4ff;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #cccccc;
+            text-align: center;
+        }
+
+        .screen {
+            padding: 20px;
+        }
+
+        /* Dashboard Screen */
+        .workflow-card {
+            background: #2a2a2a;
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .workflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .workflow-name {
+            font-size: 18px;
+            color: #ffffff;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .status-active { background: #00ff88; }
+        .status-draft { background: #ffaa00; }
+        .status-paused { background: #ff4444; }
+
+        .workflow-desc {
+            font-size: 14px;
+            color: #cccccc;
+            margin-bottom: 10px;
+        }
+
+        .workflow-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .action-button {
+            background: #00d4ff;
+            color: #1a1a1a;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            flex: 1;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .evolution-info {
+            background: #1a1a1a;
+            border: 1px solid #ff6b00;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .evolution-text {
+            color: #ff6b00;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Canvas Screen */
+        .canvas-container {
+            background: #0a0a0a;
+            border: 1px solid #00d4ff;
+            border-radius: 8px;
+            height: 400px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .node-palette {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .palette-button {
+            background: #2a2a2a;
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .quantum-node {
+            position: absolute;
+            width: 120px;
+            min-height: 80px;
+            border-radius: 8px;
+            border: 2px solid #00d4ff;
+            background: #2a2a2a;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .node-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .node-label {
+            font-size: 12px;
+            color: #ffffff;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .node-type-indicator {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Node types */
+        .node-qube { border-color: #00d4ff; }
+        .node-ai { border-color: #00ff88; }
+        .node-titan { border-color: #ff6b00; }
+        .node-trigger { border-color: #cccccc; }
+
+        .node-selected {
+            background: rgba(0, 212, 255, 0.1) !important;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Splash Screen */
+        .splash {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+
+        .quantum-circuit {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .circuit-circle {
+            position: absolute;
+            border: 2px solid #00d4ff;
+            border-radius: 50%;
+        }
+
+        .circuit-1 { width: 80px; height: 80px; top: 20px; left: 20px; }
+        .circuit-2 { width: 60px; height: 60px; top: 30px; left: 30px; opacity: 0.7; }
+        .circuit-3 { width: 40px; height: 40px; top: 40px; left: 40px; opacity: 0.5; }
+
+        .qubit {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #00d4ff;
+            border-radius: 50%;
+        }
+
+        .q1 { top: 10px; left: 10px; }
+        .q2 { top: 10px; right: 10px; }
+        .q3 { bottom: 10px; left: 10px; }
+        .q4 { bottom: 10px; right: 10px; }
+
+        .splash-title {
+            font-size: 32px;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .splash-subtitle {
+            font-size: 16px;
+            color: #cccccc;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: #00d4ff;
+            width: 75%;
+            border-radius: 2px;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: #2a2a2a;
+            border-bottom: 1px solid #333;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: #cccccc;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: #00d4ff;
+            border-bottom-color: #00d4ff;
+        }
+
+        .screen-content {
+            display: none;
+        }
+
+        .screen-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showScreen('splash')">Splash</div>
+            <div class="nav-tab" onclick="showScreen('dashboard')">Dashboard</div>
+            <div class="nav-tab" onclick="showScreen('canvas')">Canvas</div>
+        </div>
+
+        <!-- Splash Screen -->
+        <div id="splash" class="screen-content active">
+            <div class="splash">
+                <div class="quantum-circuit">
+                    <div class="circuit-circle circuit-1"></div>
+                    <div class="circuit-circle circuit-2"></div>
+                    <div class="circuit-circle circuit-3"></div>
+                    <div class="qubit q1"></div>
+                    <div class="qubit q2"></div>
+                    <div class="qubit q3"></div>
+                    <div class="qubit q4"></div>
+                </div>
+                <div class="splash-title">QuantumForge</div>
+                <div class="splash-subtitle">Mobile Workflow Engine</div>
+                <div class="loading-bar">
+                    <div class="loading-progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard" class="screen-content">
+            <div class="screen">
+                <div class="workflow-card">
+                    <div class="workflow-header">
+                        <div class="workflow-name">Quantum Publishing Pipeline</div>
+                        <div class="status-badge status-active">ACTIVE</div>
+                    </div>
+                    <div class="workflow-desc">AI-powered content creation with BB84 encryption and Titan optimization.</div>
+                    <div class="workflow-actions">
+                        <div class="action-button">Edit Canvas</div>
+                        <div class="action-button">View History</div>
+                    </div>
+                    <div class="evolution-info">
+                        <div class="evolution-text">Evolution: revenue optimization</div>
+                    </div>
+                </div>
+
+                <div class="workflow-card">
+                    <div class="workflow-header">
+                        <div class="workflow-name">Revenue Optimization Engine</div>
+                        <div class="status-badge status-active">ACTIVE</div>
+                    </div>
+                    <div class="workflow-desc">Self-evolving workflow for automated revenue optimization using quantum computing.</div>
+                    <div class="workflow-actions">
+                        <div class="action-button">Edit Canvas</div>
+                        <div class="action-button">View History</div>
+                    </div>
+                    <div class="evolution-info">
+                        <div class="evolution-text">Evolution: conversion optimization</div>
+                    </div>
+                </div>
+
+                <div class="workflow-card">
+                    <div class="workflow-header">
+                        <div class="workflow-name">API Gateway Protector</div>
+                        <div class="status-badge status-draft">DRAFT</div>
+                    </div>
+                    <div class="workflow-desc">Quantum-secured API gateway with real-time threat detection and evolution.</div>
+                    <div class="workflow-actions">
+                        <div class="action-button">Edit Canvas</div>
+                        <div class="action-button">View History</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Screen -->
+        <div id="canvas" class="screen-content">
+            <div class="screen">
+                <div class="node-palette">
+                    <div class="palette-button">TRIGGER_HTTP</div>
+                    <div class="palette-button">QUBE_KEY</div>
+                    <div class="palette-button">AI_AGENT</div>
+                    <div class="palette-button">QUBE_COMPUTE</div>
+                    <div class="palette-button">TITAN_OPTIMIZER</div>
+                    <div class="palette-button">META_EVOLVER</div>
+                </div>
+
+                <div class="canvas-container">
+                    <!-- Quantum nodes -->
+                    <div class="quantum-node node-trigger" style="left: 50px; top: 50px;">
+                        <div class="node-icon">🌐</div>
+                        <div class="node-label">API Trigger</div>
+                        <div class="node-type-indicator" style="background: #cccccc;"></div>
+                    </div>
+
+                    <div class="quantum-node node-qube" style="left: 200px; top: 50px;">
+                        <div class="node-icon">🔐</div>
+                        <div class="node-label">BB84 Key Gen</div>
+                        <div class="node-type-indicator" style="background: #00d4ff;"></div>
+                    </div>
+
+                    <div class="quantum-node node-ai" style="left: 350px; top: 50px;">
+                        <div class="node-icon">🤖</div>
+                        <div class="node-label">Content AI</div>
+                        <div class="node-type-indicator" style="background: #00ff88;"></div>
+                    </div>
+
+                    <div class="quantum-node node-qube" style="left: 200px; top: 200px;">
+                        <div class="node-icon">⚛️</div>
+                        <div class="node-label">Quantum Encrypt</div>
+                        <div class="node-type-indicator" style="background: #00d4ff;"></div>
+                    </div>
+
+                    <div class="quantum-node node-titan node-selected" style="left: 350px; top: 200px;">
+                        <div class="node-icon">🧬</div>
+                        <div class="node-label">Performance Opt</div>
+                        <div class="node-type-indicator" style="background: #ff6b00;"></div>
+                    </div>
+
+                    <!-- Connection lines would be rendered with SVG -->
+                    <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
+                        <line x1="110" y1="90" x2="260" y2="90" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+                        <line x1="260" y1="90" x2="410" y2="90" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+                        <line x1="410" y1="90" x2="260" y2="240" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+                        <line x1="260" y1="240" x2="410" y2="240" stroke="#00d4ff" stroke-width="3"/>
+                        <!-- Arrowheads -->
+                        <polygon points="405,235 410,240 415,235" fill="#00d4ff"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen-content').forEach(screen => {
+                screen.classList.remove('active');
+            });
+
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+
+            // Update nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

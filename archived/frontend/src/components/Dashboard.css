@@ -1,0 +1,351 @@
+.dashboard {
+  padding: 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.dashboard-header {
+  margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin-bottom: 10px;
+  background: linear-gradient(45deg, #00d4ff, #0099cc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dashboard-header p {
+  color: #b0b0b0;
+  font-size: 1.1rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.1);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 212, 255, 0.1);
+  border-radius: 10px;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #00d4ff;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+}
+
+.stat-change {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.stat-change.up {
+  color: #00ff00;
+}
+
+.stat-change.down {
+  color: #ff4d4d;
+}
+
+.stat-change.stable {
+  color: #ffa500;
+}
+
+.stat-change.pending {
+  color: #bbbbbb;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.dashboard-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.dashboard-section h2 {
+  font-size: 1.3rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.workflow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.workflow-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.workflow-info h3 {
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0 0 5px 0;
+  color: #ffffff;
+}
+
+.workflow-time {
+  font-size: 0.8rem;
+  color: #888888;
+}
+
+.workflow-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.workflow-status.running {
+  background: rgba(0, 212, 255, 0.2);
+  color: #00d4ff;
+}
+
+.workflow-status.completed {
+  background: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metric-label {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+}
+
+.metric-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #00d4ff;
+}
+
+.metric-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.metric-status.excellent {
+  background: rgba(0, 255, 0, 0.2);
+  color: #00ff00;
+}
+
+.metric-status.good {
+  background: rgba(0, 212, 255, 0.2);
+  color: #00d4ff;
+}
+
+.metric-status.warning {
+  background: rgba(255, 165, 0, 0.2);
+  color: #ffb347;
+}
+
+.metric-status.pending {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cccccc;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.health-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.health-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.health-label {
+  min-width: 120px;
+  font-size: 0.9rem;
+  color: #b0b0b0;
+}
+
+.health-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.health-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00d4ff 0%, #00ff00 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.health-value {
+  min-width: 40px;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #00d4ff;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-section.full-width {
+    grid-column: auto;
+  }
+
+  .workflow-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .metric-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .health-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.action-button.primary {
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+}
+
+.action-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4);
+}
+
+.action-button.secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.action-button.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.action-icon {
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}

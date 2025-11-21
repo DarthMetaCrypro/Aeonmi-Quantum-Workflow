@@ -1,0 +1,90 @@
+# Aeonmi Quantum Realtime Application Orchestrator
+# Coordinates the realtime monitor, storage, and UI bindings
+
+import engine from './engine.aeonmi'
+import QuantumRealtimeMonitor from './realtime_monitor.aeonmi'
+import storage from '../data/storage.aeonmi'
+import ui from '../ui/interface.qube'
+
+class AeonmiRealtimeApplication {
+    constructor(engine_instance) {
+        this.engine = engine_instance
+        this.monitor = new QuantumRealtimeMonitor(engine_instance)
+        this.is_active = false
+        this.bound_handlers = {}
+    }
+
+    launch() {
+        if (this.is_active) {
+            print("Realtime application already active")
+            return
+        }
+
+        print("Bootstrapping quantum realtime experience...")
+        storage.init()
+        this.monitor.bootstrap_default_streams()
+        this.bind_event_reactions()
+        this.monitor.start()
+        ui.render_realtime_panel(this.monitor.get_status())
+        this.is_active = true
+        print("Realtime application initialized")
+    }
+
+    bind_event_reactions() {
+        stream_handler = function(payload) {
+            ui.update_realtime_pulse(payload)
+        }
+
+        anomaly_handler = function(anomaly) {
+            storage.save("anomaly_recent", anomaly)
+            ui.show_anomaly_banner(anomaly)
+        }
+
+        snapshot_handler = function(snapshot) {
+            ui.render_snapshot(snapshot)
+        }
+
+        monitor_handler = function(state) {
+            ui.update_monitor_status(state)
+        }
+
+        this.engine.on("stream_tick", stream_handler)
+        this.engine.on("anomaly_detected", anomaly_handler)
+        this.engine.on("snapshot_persisted", snapshot_handler)
+        this.engine.on("monitor_started", monitor_handler)
+        this.engine.on("monitor_stopped", monitor_handler)
+
+        this.bound_handlers = {
+            stream_tick: stream_handler,
+            anomaly_detected: anomaly_handler,
+            snapshot_persisted: snapshot_handler,
+            monitor_started: monitor_handler,
+            monitor_stopped: monitor_handler
+        }
+    }
+
+    shutdown() {
+        if (!this.is_active) {
+            return
+        }
+
+        this.monitor.stop()
+        for (event_type in this.bound_handlers) {
+            this.engine.off(event_type, this.bound_handlers[event_type])
+        }
+
+        this.bound_handlers = {}
+        this.is_active = false
+        print("Realtime application shut down")
+    }
+
+    get_state() {
+        return {
+            engine_running: this.engine.is_running,
+            monitor: this.monitor.get_status()
+        }
+    }
+}
+
+realtime_app = new AeonmiRealtimeApplication(engine)
+export default realtime_app

@@ -1,0 +1,110 @@
+// Sample Aeonmi.ai scripts for quantum-secured workflows
+
+// Quantum Publishing Workflow
+workflow quantum_publish {
+  qube_key auth_key {
+    algorithm: "BB84";
+    length: 256;
+  }
+
+  http_trigger publish_trigger {
+    method: "POST";
+    path: "/api/publish";
+  }
+
+  ai_agent content_processor {
+    system_prompt: "Process and optimize content for quantum-secured publishing";
+    temperature: 0.7;
+  }
+
+  qube_compute encrypt_content {
+    operation: "symmetric_encrypt";
+    key_source: "auth_key";
+  }
+
+  titan_optimizer performance_monitor {
+    kpi_primary: "throughput";
+    constraints: {
+      must_use_qube_security: true;
+      max_latency_ms: 5000;
+    }
+  }
+
+  connect publish_trigger -> content_processor;
+  connect content_processor -> encrypt_content;
+  connect encrypt_content -> performance_monitor;
+}
+
+// Self-Evolving Revenue Optimization
+workflow revenue_optimizer {
+  schedule_trigger daily_analysis {
+    cron: "0 9 * * *"; // Daily at 9 AM
+  }
+
+  db_action fetch_metrics {
+    query: "SELECT revenue, conversions FROM analytics WHERE date >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+  }
+
+  meta_evolver evolution_engine {
+    policy: {
+      enabled: true;
+      max_variants: 5;
+      kpi_primary: "revenue";
+      constraints: {
+        must_use_qube_security: true;
+      }
+    }
+  }
+
+  qube_compute optimize_pricing {
+    operation: "quantum_optimization";
+    algorithm: "QAOA";
+  }
+
+  email_action send_report {
+    template: "revenue_optimization_report";
+    recipients: ["analyst@company.com"];
+  }
+
+  connect daily_analysis -> fetch_metrics;
+  connect fetch_metrics -> evolution_engine;
+  connect evolution_engine -> optimize_pricing;
+  connect optimize_pricing -> send_report;
+}
+
+// Quantum-Secured API Gateway
+workflow api_gateway {
+  http_trigger api_request {
+    method: "ANY";
+    path: "/api/*";
+  }
+
+  qube_key session_key {
+    algorithm: "BB84";
+    length: 512;
+  }
+
+  logic_condition auth_check {
+    expression: "request.headers.authorization != null";
+  }
+
+  qube_compute verify_token {
+    operation: "quantum_verify";
+    key_source: "session_key";
+  }
+
+  action_http proxy_request {
+    url: "https://backend.company.com";
+    forward_headers: true;
+  }
+
+  util_transform response_encrypt {
+    operation: "encrypt_response";
+    key_source: "session_key";
+  }
+
+  connect api_request -> auth_check;
+  connect auth_check -> verify_token (condition: true);
+  connect verify_token -> proxy_request;
+  connect proxy_request -> response_encrypt;
+}

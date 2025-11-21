@@ -1,0 +1,59 @@
+# Aeonmi Utility Functions
+# Common utility functions using Qube script
+
+function quantum_transform(data) {
+    # Simulate quantum processing
+    print("Applying quantum transformation...")
+    # In a real implementation, this would use quantum algorithms
+    return data * 1.41421356237  # sqrt(2) for quantum effect
+}
+
+function validate_input(input) {
+    if (!input) {
+        throw "Input cannot be empty"
+    }
+    return true
+}
+
+function format_output(data, format = "json") {
+    switch (format) {
+        case "json":
+            return JSON.stringify(data)
+        case "xml":
+            return "<data>" + data + "</data>"
+        default:
+            return data.toString()
+    }
+}
+
+function log_message(level, message) {
+    timestamp = new Date().toISOString()
+    print("[" + timestamp + "] [" + level.toUpperCase() + "] " + message)
+}
+
+function measure_performance(func) {
+    start_time = Date.now()
+    result = func()
+    end_time = Date.now()
+    duration = end_time - start_time
+    print("Function executed in " + duration + "ms")
+    return result
+}
+
+function generate_id() {
+    return "aeonmi_" + Math.random().toString(36).substr(2, 9)
+}
+
+function deep_clone(obj) {
+    return JSON.parse(JSON.stringify(obj))
+}
+
+export {
+    quantum_transform,
+    validate_input,
+    format_output,
+    log_message,
+    measure_performance,
+    generate_id,
+    deep_clone
+}

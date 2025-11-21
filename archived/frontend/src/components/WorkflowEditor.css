@@ -1,0 +1,272 @@
+.workflow-editor {
+  padding: 20px;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+  color: #ffffff;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-header {
+  margin-bottom: 20px;
+}
+
+.editor-header h1 {
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin-bottom: 10px;
+  background: linear-gradient(45deg, #00d4ff, #0099cc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.editor-header p {
+  color: #b0b0b0;
+  font-size: 1.1rem;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.primary {
+  background: linear-gradient(45deg, #00d4ff, #0099cc);
+  border-color: #00d4ff;
+}
+
+.toolbar-btn.primary:hover {
+  box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+}
+
+.toolbar-btn.secondary {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.toolbar-separator {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 10px;
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.editor-canvas {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px dashed rgba(0, 212, 255, 0.2);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.editor-canvas:active {
+  cursor: grabbing;
+}
+
+.connections-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.workflow-node {
+  position: absolute;
+  width: 150px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: move;
+  user-select: none;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.workflow-node:hover {
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.2);
+  transform: scale(1.02);
+}
+
+.workflow-node.selected {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  border-width: 3px;
+}
+
+.workflow-node.dragging {
+  opacity: 0.8;
+  transform: rotate(2deg);
+}
+
+.node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+
+.iot-policy-banner {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(0, 153, 204, 0.08);
+  font-size: 0.85rem;
+  color: #8cecff;
+}
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.node-icon {
+  font-size: 1.2rem;
+}
+
+.node-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ffffff;
+  flex: 1;
+}
+
+.node-ports {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.port {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  position: relative;
+}
+
+.input-port {
+  background: #00d4ff;
+  border-color: #00d4ff;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+}
+
+.output-port {
+  background: #00ff00;
+  border-color: #00ff00;
+  box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
+}
+
+.editor-properties {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.editor-properties h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  color: #ffffff;
+}
+
+.properties-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.property-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.property-group label {
+  font-size: 0.85rem;
+  color: #b0b0b0;
+  font-weight: 500;
+}
+
+.property-group input,
+.property-group select {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.property-group input:focus,
+.property-group select:focus {
+  outline: none;
+  border-color: #00d4ff;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+}
+
+.property-group input[readonly] {
+  background: rgba(255, 255, 255, 0.05);
+  cursor: not-allowed;
+}
+
+.no-selection {
+  color: #888888;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+@media (max-width: 768px) {
+  .editor-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-btn {
+    justify-content: center;
+  }
+
+  .workflow-node {
+    width: 120px;
+  }
+
+  .editor-properties {
+    margin-top: 10px;
+  }
+}

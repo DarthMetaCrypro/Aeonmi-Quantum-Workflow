@@ -1,0 +1,400 @@
+# Quantum Realtime Monitor for Aeonmi
+# Drives high-frequency telemetry synthesis and anomaly signaling
+
+import utils from './utils.qube'
+import storage from '../data/storage.aeonmi'
+
+class QuantumStream {
+    constructor(config) {
+        this.name = config.name
+        this.interval = config.interval || 1000
+        this.generator = config.generator
+        this.max_samples = config.max_samples || 60
+        this.thresholds = config.thresholds || {}
+        this.metadata = config.metadata || {}
+        this.samples = []
+        this.timer = null
+    }
+
+    start(controller) {
+        if (this.timer) {
+            return
+        }
+
+        stream_ref = this
+        this.timer = setInterval(function() {
+            stream_ref.collect_sample(controller)
+        }, this.interval)
+
+        controller.engine.trigger("stream_started", {name: this.name, interval: this.interval})
+    }
+
+    stop(controller) {
+        if (!this.timer) {
+            return
+        }
+
+        clearInterval(this.timer)
+        this.timer = null
+        controller.engine.trigger("stream_stopped", {name: this.name})
+    }
+
+    collect_sample(controller) {
+        value = this.generator()
+        sample = {
+            timestamp: Date.now(),
+            value: Math.round(value * 1000) / 1000
+        }
+
+        this.samples.push(sample)
+        if (this.samples.length > this.max_samples) {
+            this.samples.shift()
+        }
+
+        controller.handle_sample(this, sample)
+    }
+
+    latest() {
+        if (this.samples.length == 0) {
+            return null
+        }
+
+        return this.samples[this.samples.length - 1]
+    }
+}
+
+class QuantumRealtimeMonitor {
+    constructor(engine) {
+        this.engine = engine
+        this.streams = {}
+        this.snapshot_history = []
+        this.snapshot_retention = 12
+        this.snapshot_interval = 7000
+        this.snapshot_timer = null
+        this.health_score = 1.0
+        this.coherence_registry = {}
+        this.sequence_id = 0
+    }
+
+    bootstrap_default_streams() {
+        if (Object.keys(this.streams).length > 0) {
+            return
+        }
+
+        this.register_stream({
+            name: "resonance_flux",
+            interval: 900,
+            max_samples: 80,
+            thresholds: {min: 32, max: 94, drift: 6, volatility: 8},
+            metadata: {label: "Resonance Flux", units: "qubits/s"},
+            generator: this.create_wave_generator(64, 18, 0.12)
+        })
+
+        this.register_stream({
+            name: "coherence_delta",
+            interval: 1200,
+            max_samples: 90,
+            thresholds: {min: 0.72, max: 1.18, drift: 0.12, volatility: 0.18},
+            metadata: {label: "Coherence Delta", units: "stability"},
+            generator: this.create_decay_generator(0.96, 0.08, 0.15)
+        })
+
+        this.register_stream({
+            name: "entanglement_bandwidth",
+            interval: 1500,
+            max_samples: 75,
+            thresholds: {min: 18, max: 58, drift: 7, volatility: 9},
+            metadata: {label: "Entanglement Bandwidth", units: "pairs/min"},
+            generator: this.create_spike_generator(34, 9, 0.18)
+        })
+    }
+
+    register_stream(config) {
+        if (!config.name || !config.generator) {
+            throw "Invalid stream configuration"
+        }
+
+        this.streams[config.name] = new QuantumStream(config)
+        this.coherence_registry[config.name] = "unknown"
+        print("Registered realtime stream: " + config.name)
+    }
+
+    start() {
+        if (!this.engine.is_running) {
+            print("Cannot start realtime monitor before engine is running")
+            return
+        }
+
+        print("Starting quantum realtime monitor...")
+        for (stream_name in this.streams) {
+            this.streams[stream_name].start(this)
+        }
+
+        self = this
+        if (!this.snapshot_timer) {
+            this.snapshot_timer = setInterval(function() {
+                self.persist_snapshot()
+            }, this.snapshot_interval)
+        }
+
+        this.engine.trigger("monitor_started", {streams: Object.keys(this.streams)})
+    }
+
+    stop() {
+        for (stream_name in this.streams) {
+            this.streams[stream_name].stop(this)
+        }
+
+        if (this.snapshot_timer) {
+            clearInterval(this.snapshot_timer)
+            this.snapshot_timer = null
+        }
+
+        this.engine.trigger("monitor_stopped", {reason: "manual"})
+    }
+
+    handle_sample(stream, sample) {
+        diagnostics = this.evaluate_sample(stream, sample)
+        payload = {
+            stream: stream.name,
+            label: stream.metadata.label || stream.name,
+            value: sample.value,
+            timestamp: sample.timestamp,
+            normalized: diagnostics.normalized,
+            trend: diagnostics.trend,
+            volatility: diagnostics.volatility,
+            status: diagnostics.status
+        }
+
+        this.engine.trigger("stream_tick", payload)
+
+        if (diagnostics.status == "anomaly" || diagnostics.status == "drift") {
+            anomaly_payload = {
+                stream: stream.name,
+                status: diagnostics.status,
+                severity: diagnostics.severity,
+                value: sample.value,
+                timestamp: sample.timestamp,
+                thresholds: stream.thresholds
+            }
+
+            this.engine.trigger("anomaly_detected", anomaly_payload)
+            this.coherence_registry[stream.name] = "unstable"
+        } else {
+            this.coherence_registry[stream.name] = "stable"
+        }
+
+        this.recalculate_health()
+    }
+
+    evaluate_sample(stream, sample) {
+        metrics = this.compute_metrics(stream)
+        normalized_value = this.normalize_value(sample.value, stream.thresholds)
+        status = "nominal"
+        severity = "low"
+
+        if (stream.thresholds.max && sample.value > stream.thresholds.max) {
+            status = "anomaly"
+            severity = "critical"
+        } else if (stream.thresholds.min && sample.value < stream.thresholds.min) {
+            status = "anomaly"
+            severity = "critical"
+        } else if (stream.thresholds.drift && Math.abs(metrics.trend) > stream.thresholds.drift) {
+            status = "drift"
+            severity = "medium"
+        } else if (stream.thresholds.volatility && metrics.volatility > stream.thresholds.volatility) {
+            status = "drift"
+            severity = "medium"
+        }
+
+        return {
+            normalized: normalized_value,
+            trend: metrics.trend,
+            volatility: metrics.volatility,
+            status: status,
+            severity: severity
+        }
+    }
+
+    compute_metrics(stream) {
+        if (stream.samples.length == 0) {
+            return {average: 0, trend: 0, volatility: 0}
+        }
+
+        total = 0
+        for (index = 0; index < stream.samples.length; index++) {
+            entry = stream.samples[index]
+            total += entry.value
+        }
+
+        average = total / stream.samples.length
+        window = Math.min(stream.samples.length, 5)
+        trend = 0
+
+        if (window >= 2) {
+            start_index = stream.samples.length - window
+            first_value = stream.samples[start_index].value
+            last_value = stream.samples[stream.samples.length - 1].value
+            trend = last_value - first_value
+        }
+
+        volatility = this.calculate_volatility(stream.samples)
+
+        return {
+            average: Math.round(average * 1000) / 1000,
+            trend: Math.round(trend * 1000) / 1000,
+            volatility: volatility
+        }
+    }
+
+    calculate_volatility(samples) {
+        if (samples.length < 2) {
+            return 0
+        }
+
+        total = 0
+        for (index = 0; index < samples.length; index++) {
+            entry = samples[index]
+            total += entry.value
+        }
+
+        mean = total / samples.length
+        variance_sum = 0
+        for (index = 0; index < samples.length; index++) {
+            entry = samples[index]
+            delta = entry.value - mean
+            variance_sum += delta * delta
+        }
+
+        variance = variance_sum / (samples.length - 1)
+        return Math.round(Math.sqrt(variance) * 1000) / 1000
+    }
+
+    normalize_value(value, thresholds) {
+        min_value = thresholds.min || 0
+        max_value = thresholds.max || (min_value + 1)
+        range_value = max_value - min_value
+        if (range_value <= 0) {
+            range_value = 1
+        }
+
+        normalized = (value - min_value) / range_value
+        if (normalized < 0) {
+            normalized = 0
+        }
+        if (normalized > 1) {
+            normalized = 1
+        }
+
+        return Math.round(normalized * 1000) / 1000
+    }
+
+    recalculate_health() {
+        aggregate = 0
+        active_streams = 0
+        for (stream_name in this.streams) {
+            latest_sample = this.streams[stream_name].latest()
+            if (latest_sample) {
+                aggregate += this.normalize_value(latest_sample.value, this.streams[stream_name].thresholds)
+                active_streams += 1
+            }
+        }
+
+        if (active_streams == 0) {
+            this.health_score = 1
+        } else {
+            this.health_score = aggregate / active_streams
+        }
+
+        this.health_score = Math.round(this.health_score * 1000) / 1000
+    }
+
+    persist_snapshot() {
+        snapshot = this.build_snapshot()
+        storage.save("realtime_snapshot_" + snapshot.sequence, snapshot)
+        this.snapshot_history.push(snapshot)
+        if (this.snapshot_history.length > this.snapshot_retention) {
+            this.snapshot_history.shift()
+        }
+
+        this.engine.trigger("snapshot_persisted", snapshot)
+        return snapshot
+    }
+
+    build_snapshot() {
+        stream_summary = {}
+        for (stream_name in this.streams) {
+            stream = this.streams[stream_name]
+            latest_sample = stream.latest()
+            metrics = this.compute_metrics(stream)
+
+            stream_summary[stream_name] = {
+                label: stream.metadata.label || stream_name,
+                latest_value: latest_sample ? latest_sample.value : null,
+                normalized: latest_sample ? this.normalize_value(latest_sample.value, stream.thresholds) : null,
+                status: this.coherence_registry[stream_name] || "unknown",
+                trend: metrics.trend,
+                volatility: metrics.volatility
+            }
+        }
+
+        snapshot = {
+            id: utils.generate_id(),
+            sequence: this.sequence_id,
+            timestamp: new Date().toISOString(),
+            health_score: Math.round(this.health_score * 100) / 100,
+            streams: stream_summary
+        }
+
+        this.sequence_id += 1
+        return snapshot
+    }
+
+    get_status() {
+        return {
+            health_score: this.health_score,
+            streams: Object.keys(this.streams),
+            snapshots_cached: this.snapshot_history.length,
+            last_snapshot: this.snapshot_history.length > 0 ? this.snapshot_history[this.snapshot_history.length - 1] : null
+        }
+    }
+
+    create_wave_generator(center, amplitude, turbulence) {
+        seed = Math.random() * Math.PI * 2
+        return function() {
+            time_scalar = Date.now() / 1000
+            wave = Math.sin(time_scalar + seed) * amplitude
+            drift = Math.cos(time_scalar / 8 + seed / 4) * amplitude * 0.3
+            noise = (Math.random() - 0.5) * amplitude * turbulence
+            value = center + wave + drift + noise
+            return Math.round(value * 1000) / 1000
+        }
+    }
+
+    create_decay_generator(base_value, micro_drift, turbulence) {
+        seed = Math.random() * 500
+        return function() {
+            time_scalar = Date.now() / 1500
+            drift = Math.sin(time_scalar / 3 + seed) * micro_drift
+            resonance = Math.max(0, Math.sin(time_scalar / 5 + seed / 2)) * micro_drift * 1.6
+            noise = (Math.random() - 0.5) * turbulence
+            value = base_value + drift + resonance + noise
+            return Math.round(value * 1000) / 1000
+        }
+    }
+
+    create_spike_generator(base_value, amplitude, spike_probability) {
+        seed = Math.random() * 100
+        return function() {
+            time_scalar = Date.now() / 1100
+            carrier = base_value + Math.sin(time_scalar + seed) * amplitude
+            noise = (Math.random() - 0.5) * amplitude * 0.4
+            if (Math.random() < spike_probability) {
+                carrier += amplitude * 2.5
+            }
+            return Math.round((carrier + noise) * 1000) / 1000
+        }
+    }
+}
+
+export default QuantumRealtimeMonitor
