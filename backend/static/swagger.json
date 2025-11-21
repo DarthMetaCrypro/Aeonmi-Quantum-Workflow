@@ -1,0 +1,88 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "QuantumForge API",
+    "description": "Revolutionary Quantum Workflow Automation Platform",
+    "version": "1.0.0",
+    "contact": {
+      "name": "QuantumForge Support",
+      "url": "https://github.com/DarthMetaCrypro/Aeonmi-Quantum-Workflow"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Development server"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "API is healthy"
+          }
+        }
+      }
+    },
+    "/api/quantum/bb84/generate-key": {
+      "post": {
+        "summary": "Generate BB84 quantum key",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key_length": {
+                    "type": "integer",
+                    "default": 256
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quantum key generated successfully"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    },
+    "/api/quantum/hardware/submit": {
+      "post": {
+        "summary": "Submit quantum job to hardware",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Job submitted successfully"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

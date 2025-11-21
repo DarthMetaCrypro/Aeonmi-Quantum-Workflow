@@ -681,5 +681,57 @@ if __name__ == '__main__':
         print('[OK] IBM Quantum: Available')
     if AWS_BRAKET_AVAILABLE:
         print('[OK] AWS Braket: Available')
+
+    # Global error handlers
+    @app.errorhandler(400)
+    def bad_request(error):
+        logger.warning(f'Bad Request: {error}')
+        return jsonify({'error': 'Bad request', 'message': str(error)}), 400
+
+    @app.errorhandler(401)
+    def unauthorized(error):
+        logger.warning(f'Unauthorized access attempt: {error}')
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    @app.errorhandler(403)
+    def forbidden(error):
+        logger.warning(f'Forbidden access: {error}')
+        return jsonify({'error': 'Forbidden'}), 403
+
+    @app.errorhandler(404)
+    def not_found(error):
+        logger.info(f'Not found: {error}')
+        return jsonify({'error': 'Not found'}), 404
+
+    @app.errorhandler(429)
+    def rate_limit_exceeded(error):
+        logger.warning(f'Rate limit exceeded: {error}')
+        return jsonify({'error': 'Rate limit exceeded', 'retry_after': error.description}), 429
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        logger.error(f'Internal server error: {error}')
+        return jsonify({'error': 'Internal server error'}), 500
+
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+        logger.error(f'Unhandled exception: {error}', exc_info=True)
+        return jsonify({'error': 'Internal server error'}), 500
+
+    # Swagger UI for API documentation
+    from flask_swagger_ui import get_swaggerui_blueprint
+
+    SWAGGER_URL = '/api/docs'
+    API_URL = '/static/swagger.json'
+
+    swaggerui_blueprint = get_swaggerui_blueprint(
+        SWAGGER_URL,
+        API_URL,
+        config={
+            'app_name': "QuantumForge API"
+        }
+    )
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+
     app.run(debug=False, port=5000, use_reloader=False)
 
