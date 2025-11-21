@@ -1,0 +1,241 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # LOAD BALANCER & REVERSE PROXY
+  # ==========================================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: quantumforge-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - quantumforge_network
+
+  # ==========================================
+  # FRONTEND APPLICATION
+  # ==========================================
+  frontend:
+    image: quantumforge/frontend:latest
+    container_name: quantumforge-frontend
+    environment:
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=https://api.quantumforge.com
+      - VITE_CDN_URL=https://cdn.quantumforge.com
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - quantumforge_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ==========================================
+  # BACKEND API
+  # ==========================================
+  backend:
+    image: quantumforge/backend:latest
+    container_name: quantumforge-backend
+    env_file:
+      - .env.enterprise
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - quantumforge_network
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  # ==========================================
+  # DATABASE
+  # ==========================================
+  db:
+    image: postgres:15-alpine
+    container_name: quantumforge-db
+    environment:
+      - POSTGRES_DB=quantumforge_prod
+      - POSTGRES_USER=quantumforge_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./db/backups:/backups
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quantumforge_user -d quantumforge_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - quantumforge_network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # ==========================================
+  # REDIS CACHE
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: quantumforge-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - quantumforge_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ==========================================
+  # MONITORING & LOGGING
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: quantumforge-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - quantumforge_network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: quantumforge-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    restart: unless-stopped
+    networks:
+      - quantumforge_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  # ==========================================
+  # BACKUP SERVICE
+  # ==========================================
+  backup:
+    image: postgres:15-alpine
+    container_name: quantumforge-backup
+    environment:
+      - POSTGRES_DB=quantumforge_prod
+      - POSTGRES_USER=quantumforge_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./db/backups:/backups
+    command: >
+      bash -c "
+        while true; do
+          pg_dump -h db -U quantumforge_user quantumforge_prod > /backups/backup_$(date +%Y%m%d_%H%M%S).sql
+          aws s3 cp /backups/ s3://${BACKUP_S3_BUCKET}/ --recursive --exclude '*' --include 'backup_*.sql'
+          sleep 86400
+        done
+      "
+    depends_on:
+      - db
+    restart: unless-stopped
+    networks:
+      - quantumforge_network
+
+  # ==========================================
+  # LOG AGGREGATION
+  # ==========================================
+  loki:
+    image: grafana/loki:latest
+    container_name: quantumforge-loki
+    volumes:
+      - loki_data:/loki
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    networks:
+      - quantumforge_network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  nginx_logs:
+    driver: local
+  loki_data:
+    driver: local
+
+networks:
+  quantumforge_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

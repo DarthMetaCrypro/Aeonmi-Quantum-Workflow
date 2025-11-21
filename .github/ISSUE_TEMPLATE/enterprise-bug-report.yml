@@ -1,0 +1,180 @@
+---
+name: 🐛 Enterprise Bug Report
+description: Report a bug in QuantumForge Enterprise Platform
+title: "[BUG] - "
+labels: ["bug", "enterprise", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🐛 Enterprise Bug Report
+
+        Thank you for reporting this issue. This helps us maintain the highest quality for our Enterprise customers.
+
+        **Please provide detailed information to help us resolve this issue quickly.**
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity Level
+      description: How critical is this issue to your operations?
+      options:
+        - Critical - System Down/Production Impact
+        - High - Major Feature Broken
+        - Medium - Feature Impaired
+        - Low - Minor Issue/Cosmetic
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where did this issue occur?
+      options:
+        - Production
+        - Staging
+        - Development
+        - Testing
+    validations:
+      required: true
+
+  - type: input
+    id: organization
+    attributes:
+      label: Organization ID
+      description: Your QuantumForge Organization ID (for Enterprise support)
+      placeholder: "QF-ORG-XXXX"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of the bug
+      placeholder: "Describe what happened, what you expected to happen, and steps to reproduce"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+      value: |
+        1.
+        2.
+        3.
+        4.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Logs/Screenshots
+      description: Please include relevant error logs, screenshots, or console output
+      placeholder: "Paste error logs here or attach screenshots"
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & Version
+      description: If this is a frontend issue, which browser and version?
+      placeholder: "Chrome 120.0.6099.109"
+    validations:
+      required: false
+
+  - type: input
+    id: quantum-backend
+    attributes:
+      label: Quantum Backend
+      description: Which quantum computing backend were you using?
+      placeholder: "IBM Quantum ibmq_manhattan"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: affected-component
+    attributes:
+      label: Affected Component
+      description: Which part of QuantumForge is affected?
+      options:
+        - Frontend UI
+        - Backend API
+        - Quantum Processing
+        - MotherAI Assistant
+        - Authentication
+        - Database
+        - Workflow Engine
+        - BB84 Security
+        - Monitoring
+        - Deployment/Infrastructure
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment-details
+    attributes:
+      label: Environment Details
+      description: Additional environment information
+      placeholder: |
+        - OS: Windows 11
+        - QuantumForge Version: v1.0.0
+        - Deployment: Docker
+        - Database: PostgreSQL 15
+        - Quantum Hardware: IBM Quantum
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any additional information that might be helpful
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: Please confirm these items
+      options:
+        - label: I have searched existing issues for duplicates
+          required: true
+        - label: I have provided detailed reproduction steps
+          required: true
+        - label: I have included relevant error logs/screenshots
+          required: true
+        - label: I am using a supported environment
+          required: true
+        - label: This issue impacts production operations
+          required: false

@@ -1,0 +1,438 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: quantumforge
+  labels:
+    name: quantumforge
+    environment: production
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quantumforge-config
+  namespace: quantumforge
+data:
+  DATABASE_SSL_MODE: "require"
+  LOG_LEVEL: "WARNING"
+  METRICS_ENABLED: "true"
+  PROMETHEUS_ENABLED: "true"
+  ENTERPRISE_MODE: "true"
+  MULTI_TENANT_ENABLED: "true"
+  AUDIT_LOGGING_ENABLED: "true"
+  COMPLIANCE_MODE: "gdpr"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: quantumforge-secrets
+  namespace: quantumforge
+type: Opaque
+data:
+  # Base64 encoded secrets - replace with actual values
+  SECRET_KEY: "ZW50ZXJwcmlzZS1zZWNyZXQta2V5LWNoYW5nZS1pbi1wcm9kdWN0aW9u"
+  JWT_SECRET_KEY: "ZW50ZXJwcmlzZS1qd3Qtc2VjcmV0LWtleS1jaGFuZ2UtaW4tcHJvZHVjdGlvbg=="
+  CSRF_SECRET_KEY: "ZW50ZXJwcmlzZS1jc3JmLXNlY3JldC1rZXktY2hhbmdlLWluLXByb2R1Y3Rpb24="
+  DATABASE_URL: "cG9zdGdyZXNxbDovL3F1YW50dW1mb3JnZV91c2VyOnNlY3VyZV9wYXNzd29yZEBkYi5xdWFudHVtZm9yZ2UuaW50ZXJuYWw6NTQzMi9xdWFudHVtZm9yZ2VfcHJvZA=="
+  IBMQ_TOKEN: "eW91ci1lbnRlcnByaXNlLWlibS1xdWFudHVtLXRva2Vu"
+  REDIS_PASSWORD: "c2VjdXJlLXJlZGlzLXBhc3N3b3Jk"
+  SENTRY_DSN: "aHR0cHM6Ly95b3VyLXNlbnRyeS1kc25Ac2VudHJ5LmlvL3Byb2plY3QtaWQ="
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumforge-backend
+  namespace: quantumforge
+  labels:
+    app: quantumforge-backend
+spec:
+  selector:
+    app: quantumforge-backend
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumforge-frontend
+  namespace: quantumforge
+  labels:
+    app: quantumforge-frontend
+spec:
+  selector:
+    app: quantumforge-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumforge-db
+  namespace: quantumforge
+  labels:
+    app: quantumforge-db
+spec:
+  selector:
+    app: quantumforge-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: quantumforge-redis
+  namespace: quantumforge
+  labels:
+    app: quantumforge-redis
+spec:
+  selector:
+    app: quantumforge-redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantumforge-backend
+  namespace: quantumforge
+  labels:
+    app: quantumforge-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: quantumforge-backend
+  template:
+    metadata:
+      labels:
+        app: quantumforge-backend
+    spec:
+      containers:
+        - name: quantumforge-backend
+          image: quantumforge/backend:latest
+          ports:
+            - containerPort: 5000
+              name: http
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: JWT_SECRET_KEY
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: DATABASE_URL
+            - name: IBMQ_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: IBMQ_TOKEN
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: REDIS_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: quantumforge-config
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: tmp-volume
+              mountPath: /tmp
+      volumes:
+        - name: tmp-volume
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantumforge-frontend
+  namespace: quantumforge
+  labels:
+    app: quantumforge-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: quantumforge-frontend
+  template:
+    metadata:
+      labels:
+        app: quantumforge-frontend
+    spec:
+      containers:
+        - name: quantumforge-frontend
+          image: quantumforge/frontend:latest
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: VITE_API_BASE_URL
+              value: "https://api.quantumforge.com"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: quantumforge-db
+  namespace: quantumforge
+  labels:
+    app: quantumforge-db
+spec:
+  serviceName: quantumforge-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quantumforge-db
+  template:
+    metadata:
+      labels:
+        app: quantumforge-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: quantumforge_prod
+            - name: POSTGRES_USER
+              value: quantumforge_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: DB_PASSWORD
+          resources:
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - quantumforge_user
+                - -d
+                - quantumforge_prod
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - quantumforge_user
+                - -d
+                - quantumforge_prod
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: quantumforge-db-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: quantumforge-db-pvc
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quantumforge-redis
+  namespace: quantumforge
+  labels:
+    app: quantumforge-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: quantumforge-redis
+  template:
+    metadata:
+      labels:
+        app: quantumforge-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+              name: redis
+          command: ["redis-server", "--appendonly", "yes", "--requirepass", "$(REDIS_PASSWORD)"]
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: REDIS_PASSWORD
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "200m"
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+      volumes:
+        - name: redis-storage
+          emptyDir: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quantumforge-ingress
+  namespace: quantumforge
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.quantumforge.com
+        - app.quantumforge.com
+      secretName: quantumforge-tls
+  rules:
+    - host: api.quantumforge.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quantumforge-backend
+                port:
+                  number: 5000
+    - host: app.quantumforge.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quantumforge-frontend
+                port:
+                  number: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: quantumforge-backup-pvc
+  namespace: quantumforge
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: quantumforge-backup
+  namespace: quantumforge
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: postgres:15-alpine
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  pg_dump -h quantumforge-db -U quantumforge_user quantumforge_prod > /backup/backup_$(date +%Y%m%d_%H%M%S).sql &&
+                  # Upload to S3 or other storage
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                secretKeyRef:
+                  name: quantumforge-secrets
+                  key: DB_PASSWORD
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: quantumforge-backup-pvc
+          restartPolicy: OnFailure
